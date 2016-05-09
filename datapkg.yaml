@@ -1,0 +1,5 @@
+requirements:
+  - protein_folding_energy
+  - protein_interaction_energy
+  - pathogenic_mutation_sets
+
