@@ -1,0 +1,4 @@
+*.db filter=lfs diff=lfs merge=lfs -text
+*.frm filter=lfs diff=lfs merge=lfs -text
+*.MYI filter=lfs diff=lfs merge=lfs -text
+*.MYD filter=lfs diff=lfs merge=lfs -text
