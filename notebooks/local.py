@@ -1,6 +1,5 @@
 import logging
 import datetime
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +41,8 @@ def annotate_blast_results(result_df, domain_start, domain_sequence_length):
         (result_df['q_end'] - result_df['q_start'] + 1) / float(domain_sequence_length) * 100.0
     )
     result_df['alignment_score'] = (
-        alpha * (result_df['alignment_identity'].values / 100) * (result_df['alignment_coverage'].values / 100) +
+        alpha * (result_df['alignment_identity'].values / 100) *
+        (result_df['alignment_coverage'].values / 100) +
         (1 - alpha) * (result_df['alignment_coverage'].values / 100)
     )
 
@@ -94,9 +94,26 @@ def remove_domains_outside_mutation(result_df, mutation):
     return result_df
 
 
-stratify_by_pc_identity = [
-    (100, lambda x: x >= 80),
-    (80, lambda x: (x >= 60) & (x < 80)),
-    (60, lambda x: (x >= 40) & (x < 60)),
-    (40, lambda x: x < 40),
-]
+def get_max_seq_identity(alignment_identity):
+    """
+    Examples
+    --------
+    >>> get_max_seq_identity(90.63)
+    100
+    >>> get_max_seq_identity(81.54)
+    100
+    >>> get_max_seq_identity(71.2)
+    80
+    >>> get_max_seq_identity(59.3)
+    60
+    >>> get_max_seq_identity(11.1)
+    40
+    """
+    assert (alignment_identity <= 100) & (alignment_identity > 1.0)
+    if alignment_identity > 80:
+        return 100
+    elif alignment_identity > 60:
+        return 80
+    elif alignment_identity > 40:
+        return 60
+    return 40
