@@ -7,6 +7,7 @@ _*
 
 # Temporary files
 notebooks/*/**
+notebooks/*.html
 
 # Keep downloads
 downloads/*
@@ -16,3 +17,6 @@ downloads/*
 # Keep output
 output/*
 !output/*.gz
+
+*.bak
+
