@@ -1,5 +1,6 @@
 import logging
 import datetime
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -57,63 +58,102 @@ def annotate_blast_results(result_df, domain_start, domain_sequence_length):
     return result_df
 
 
-def get_templates(x):
-
-    unique_id, uniprot_id, uniprot_mutation, domain_def, uniprot_sequence = x
-
-    try:
-        result_df, system_command = run_blast(uniprot_id, uniprot_sequence, domain_def)
-        if result_df is None or len(result_df) == 0:
-            raise Exception('No templates were found in the PDB database!')
-        result_df['unique_id'] = unique_id
-
-        blast_results_mutdom = remove_domains_outside_mutation(result_df, uniprot_mutation)
-        if blast_results_mutdom is None or len(blast_results_mutdom) == 0:
-            raise Exception('Templates that were found do not cover the site of the mutation!')
-
-    except Exception as e:
-        print(
-            'An error occured!\n',
-            e, '\n',
-            uniprot_id, ' ', domain_def, ' ', uniprot_mutation, '\n',
-            # uniprot_sequence, '\n',
-            sep='',
-        )
-        return None
-
-    return blast_results_mutdom
-
-
-def remove_domains_outside_mutation(result_df, mutation):
-    result_df = (
-        result_df[
-            result_df['domain_def_new']
-            .apply(lambda x: mutation_inside_domain([mutation, x]))
-        ].copy()
-    )
-    return result_df
-
-
 def get_max_seq_identity(alignment_identity):
     """
     Examples
     --------
-    >>> get_max_seq_identity(90.63)
+    >>> get_max_seq_identity(0.9063)
     100
-    >>> get_max_seq_identity(81.54)
+    >>> get_max_seq_identity(0.8154)
     100
-    >>> get_max_seq_identity(71.2)
+    >>> get_max_seq_identity(0.712)
     80
-    >>> get_max_seq_identity(59.3)
+    >>> get_max_seq_identity(0.593)
     60
-    >>> get_max_seq_identity(11.1)
+    >>> get_max_seq_identity(0.111)
     40
     """
-    assert (alignment_identity <= 100) & (alignment_identity > 1.0)
-    if alignment_identity > 80:
+    assert (alignment_identity <= 1) & (alignment_identity > 0.1)
+    if alignment_identity > 0.8:
         return 100
-    elif alignment_identity > 60:
+    elif alignment_identity > 0.6:
         return 80
-    elif alignment_identity > 40:
+    elif alignment_identity > 0.4:
         return 60
     return 40
+
+
+# === Standalone pipeline functions ===
+
+def get_partner_chain(protein, pdb_chain):
+    """
+    Examples
+    --------
+    >>> get_partner_chain('1CSE_E_I', 'E_A1C')
+    'I'
+    """
+    _, chain1, chain2 = protein.split('_')
+    if len(chain1) > len(chain2):
+        chain2 = chain2 + chain2[-1] * (len(chain1) - len(chain2))
+    if len(chain2) > len(chain1):
+        chain1 = chain1 + chain1[-1] * (len(chain2) - len(chain1))
+    for a, b in zip(chain1, chain2):
+        if a == pdb_chain:
+            return b
+        if b == pdb_chain:
+            return a
+    print(protein, pdb_chain, chain1, chain2)
+    raise Exception
+
+    
+def get_partner_uniprot_id(uniprot_id, uniprot_id_1, uniprot_id_2):
+    if uniprot_id == uniprot_id_1:
+        return uniprot_id_2
+    return uniprot_id_1
+
+
+# ===
+
+def get_core_mutation_features(index, mutation_json):
+    df = pd.DataFrame(mutation_json)
+    if 'idxs' in df.columns:
+        df = df[df['idxs'].isnull()]
+    if df.empty:
+        return None
+    df.index = [index] * df.shape[0]
+    return df
+
+
+mutation_not_in_interface = 0
+mutation_interface_not_found = 0
+
+
+def guess_interface_mutation_features(index, mutation_json):
+    global mutation_not_in_interface
+    global mutation_interface_not_found
+
+    df = pd.DataFrame(mutation_json)
+    if 'idxs' not in df.columns:
+        mutation_not_in_interface += 1
+        return None
+    df = df[df['idxs'].notnull()]
+    df.index = [index] * df.shape[0]
+    if df.empty:
+        mutation_interface_not_found += 1
+    return df
+
+
+def get_interface_mutation_features(index, idxs, mutation_json):
+    global mutation_not_in_interface
+    global mutation_interface_not_found
+
+    df = pd.DataFrame(mutation_json)
+    if 'idxs' not in df.columns:
+        mutation_not_in_interface += 1
+        return None
+    df = df[df['idxs'].notnull()]
+    df = df[df['idxs'].apply(lambda x: (tuple(sorted(x)) == idxs)).astype(bool)]
+    df.index = [index] * df.shape[0]
+    if df.empty:
+        mutation_interface_not_found += 1
+    return df
