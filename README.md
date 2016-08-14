@@ -1,7 +1,9 @@
 # Readme
 
-<div align="center">
-<p style="padding-bottom: 100px">
+## Flowchart
+
+<div align="center" >
+<p><b>Core</b></p>
 <img src='http://g.gravizo.com/g?
  digraph G {
   elaspic_standalone_core -> core_load_data;
@@ -11,9 +13,10 @@
   core_load_data -> core_machine_learning;
  }
 '/>
-</p>
 
-<p style="padding-bottom: 100px;">
+<br><br><br>
+
+<p><b>Interface</b></p>
 <img src='http://g.gravizo.com/g?
  digraph G {
   elaspic_standalone_interface -> interface_load_data;
@@ -23,5 +26,4 @@
   interface_load_data -> interface_machine_learning;
  }
 '/>
-<p>
 </div>
