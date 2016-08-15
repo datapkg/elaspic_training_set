@@ -1,10 +1,15 @@
 # Readme
 
+## Notes
+
+Mutation deleteriousness is best correlated with the *raw* ΔΔG values, rather than the *absolute* ΔΔG values.
+
+
 ## Flowchart
 
-<div align="center" >
+<div align="center">
 <p><b>Core</b></p>
-<img src='http://g.gravizo.com/g?
+<img width="600px" src='http://g.gravizo.com/g?
  digraph G {
   elaspic_standalone_core -> core_load_data;
   elaspic_training_core -> core_load_data;
@@ -17,7 +22,7 @@
 <br><br><br>
 
 <p><b>Interface</b></p>
-<img src='http://g.gravizo.com/g?
+<img width="600px" src='http://g.gravizo.com/g?
  digraph G {
   elaspic_standalone_interface -> interface_load_data;
   elaspic_training_interface -> interface_load_data;
