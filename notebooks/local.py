@@ -37,14 +37,14 @@ def annotate_blast_results(result_df, domain_start, domain_sequence_length):
 
     # Score sequence identity
     alpha = 0.95
-    result_df['alignment_identity'] = result_df['pc_identity']
+    result_df['alignment_identity'] = result_df['pc_identity'] / 100.0
     result_df['alignment_coverage'] = (
-        (result_df['q_end'] - result_df['q_start'] + 1) / float(domain_sequence_length) * 100.0
+        (result_df['q_end'] - result_df['q_start'] + 1) / float(domain_sequence_length)
     )
     result_df['alignment_score'] = (
-        alpha * (result_df['alignment_identity'].values / 100) *
-        (result_df['alignment_coverage'].values / 100) +
-        (1 - alpha) * (result_df['alignment_coverage'].values / 100)
+        alpha * (result_df['alignment_identity'].values) *
+        (result_df['alignment_coverage'].values) +
+        (1 - alpha) * (result_df['alignment_coverage'].values)
     )
 
     # Domain definitions
@@ -105,7 +105,7 @@ def get_partner_chain(protein, pdb_chain):
     print(protein, pdb_chain, chain1, chain2)
     raise Exception
 
-    
+
 def get_partner_uniprot_id(uniprot_id, uniprot_id_1, uniprot_id_2):
     if uniprot_id == uniprot_id_1:
         return uniprot_id_2
@@ -124,36 +124,31 @@ def get_core_mutation_features(index, mutation_json):
     return df
 
 
-mutation_not_in_interface = 0
-mutation_interface_not_found = 0
+class InterfaceMutationFeatures:
 
+    def __init__(self):
+        self._num_mutations_not_in_interface = 0
+        self._num_mutations_interface_not_found = 0
 
-def guess_interface_mutation_features(index, mutation_json):
-    global mutation_not_in_interface
-    global mutation_interface_not_found
+    def guess(self, index, mutation_json):
+        df = pd.DataFrame(mutation_json)
+        if 'idxs' not in df.columns:
+            self._num_mutations_not_in_interface += 1
+            return None
+        df = df[df['idxs'].notnull()]
+        df.index = [index] * df.shape[0]
+        if df.empty:
+            self._num_mutations_interface_not_found += 1
+        return df
 
-    df = pd.DataFrame(mutation_json)
-    if 'idxs' not in df.columns:
-        mutation_not_in_interface += 1
-        return None
-    df = df[df['idxs'].notnull()]
-    df.index = [index] * df.shape[0]
-    if df.empty:
-        mutation_interface_not_found += 1
-    return df
-
-
-def get_interface_mutation_features(index, idxs, mutation_json):
-    global mutation_not_in_interface
-    global mutation_interface_not_found
-
-    df = pd.DataFrame(mutation_json)
-    if 'idxs' not in df.columns:
-        mutation_not_in_interface += 1
-        return None
-    df = df[df['idxs'].notnull()]
-    df = df[df['idxs'].apply(lambda x: (tuple(sorted(x)) == idxs)).astype(bool)]
-    df.index = [index] * df.shape[0]
-    if df.empty:
-        mutation_interface_not_found += 1
-    return df
+    def get(self, index, idxs, mutation_json):
+        df = pd.DataFrame(mutation_json)
+        if 'idxs' not in df.columns:
+            self._num_mutations_not_in_interface += 1
+            return None
+        df = df[df['idxs'].notnull()]
+        df = df[df['idxs'].apply(lambda x: (tuple(sorted(x)) == idxs)).astype(bool)]
+        df.index = [index] * df.shape[0]
+        if df.empty:
+            self._num_mutations_interface_not_found += 1
+        return df
