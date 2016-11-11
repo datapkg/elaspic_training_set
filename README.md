@@ -1,26 +1,53 @@
-# Readme
+## Pipeline
 
-## Notes
+### Prepare data
 
-Mutation deleteriousness is best correlated with the *raw* ΔΔG values, rather than the *absolute* ΔΔG values.
+#### [elaspic_standalone](/notebooks/elaspic_standalone.ipynb)
+  
+Calculate ELASPIC features for the core and interface training sets, using the ELASPIC standalone pipeline.
 
-  - i.e. it's better to use the *raw* score when correlating with humsavar / clinvar / cosmic.
+#### [elaspic_database_core](/notebooks/elaspic_database_core.ipynb)
 
-**However**: Provean score is best correlated with the *absolute* ΔΔG value in the core training set, and with the *raw* ΔΔG values in the interface training set.
+Calculate ELASPIC features for core training sets, using the ELASPIC database pipeline.
+
+#### [elaspic_database_interface](/notebooks/elaspic_database_interface.ipynb)
+
+Calculate ELASPIC features for interface training sets, using the ELASPIC database pipeline.
+
+#### [load_data](/notebooks/load_data.ipynb)
+
+Prepare and combine all training, validation and test data into a single file for ML.
+
+#### [data_statistics](/notebooks/data_statistics.ipynb)
+
+Compute basic statistics regarding the training and validation datasets.
 
 
-## Flowchart
+### Train ELASPIC
 
-<div align="center">
-<p><b>Core</b></p>
-<img width="600px" src='http://g.gravizo.com/g?
- digraph G {
-  standalone_pipeline -> load_data;
-  elaspic_database_core -> load_data;
-  elaspic_database_interface -> load_data;
-  load_data -> data_statistics;
-  load_data -> machine_learning;
-  machine_learning -> validation
- }
-'/>
-</div>
+#### [machine_learning](/notebooks/machine_learning.ipynb)
+
+Train the ELASPIC core and interface predictors.
+
+
+### Validation
+
+#### [validation](/notebooks/validation.ipynb)
+
+Validate ELASPIC core and interface predictors on the validation and test datasets.
+
+#### [validation_cancer](/notebooks/validation_cancer.ipynb)
+
+Use ELASPIC scores to predict whether a mutation is a cancer driver or a cancer passenger.
+
+
+### Other
+
+#### [elaspic_statistics](/notebooks/elaspic_statistics.ipynb)
+
+Analysing our homology modelling and mutation coverage for the human proteome.
+
+#### [elaspic_to_calculate](/notebooks/elaspic_to_calculate.ipynb)
+
+Get a list of mutations from the validation and test datasets that remain to be calculated.
+
